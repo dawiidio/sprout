@@ -20,6 +20,7 @@ export interface GenericTask {
 export interface ProjectCli {
     filters: FilterField<any>[];
     taskFields: TaskField<any>[];
+    type: string;
 
     getPlatformQueryPrompt(query: string): Prompt<any>;
 

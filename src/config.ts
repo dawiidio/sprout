@@ -1,14 +1,12 @@
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
 import { symlink, access } from 'node:fs/promises';
 import { exec } from 'node:child_process';
 import { Config } from './types';
 import { Env } from './common';
 import { Prompt } from './llm/Prompt';
 import process from 'process';
+import { CONFIG_FILE_NAME, PATH_TO_CONFIG_FILE, TMP_DIR } from './consts';
 
-const CONFIG_FILE_NAME = 'sprout.config.ts';
-const TMP_DIR = join(tmpdir(), 'sprout-tmp');
 
 export class AppConfig {
     static config: Config;

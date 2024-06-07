@@ -4,21 +4,31 @@ import { Command } from 'commander';
 import { AppConfig } from '~/config';
 import { CHANGE_TYPE_OPTIONS, ChangeType, isIssueBranch } from '~/common';
 import { GenericTask } from '~/project/ProjectCli';
+import { FavouriteQuery, FavouriteQueryStorage } from '~/favourite/FavouriteQueryStorage';
 
-const enterPlatformQueryLoop = async (query: string, editLoop = false): Promise<string> => {
+interface PlatformQueryLoopResponse {
+    query: string;
+    save: boolean;
+}
+
+const enterPlatformQueryLoop = async (query: string, editLoop = false): Promise<PlatformQueryLoopResponse> => {
     if (editLoop) {
         query = await input({
             message: 'Edit query [click tab to edit]',
             default: query,
-        })
+        });
     }
 
-    const queryResponse = await select<'ok' | 'edit' | 'abort'>({
+    const queryResponse = await select<'ok' | 'edit' | 'abort' | 'saveAndOk'>({
         message: `Current query: ${query}`,
         choices: [
             {
                 name: 'Ok',
                 value: 'ok',
+            },
+            {
+                name: 'Save in favourites and proceed',
+                value: 'saveAndOk',
             },
             {
                 name: 'Edit',
@@ -37,27 +47,125 @@ const enterPlatformQueryLoop = async (query: string, editLoop = false): Promise<
         case 'edit':
             return await enterPlatformQueryLoop(query, true);
         case 'ok':
-            return query;
+            return {
+                query,
+                save: false,
+            };
+        case 'saveAndOk':
+            return {
+                query,
+                save: true,
+            };
     }
 };
 
-const enterNaturalLanguageQueryLoop = async (query?: string): Promise<GenericTask> => {
+const fetchTasksByQueryAndShowIndicator = async (query: string): Promise<GenericTask[]> => {
+    const { default: ora } = await import('ora');
+
+    const tasksSpinner = ora('Fetching tasks').start();
+    const tasks = await AppConfig.config.projectCli.fetchTasksByQuery(query);
+    tasksSpinner.succeed('Tasks fetched!');
+
+    return tasks;
+}
+
+const enterNaturalLanguageQueryLoop = async (query?: QueryData): Promise<QueryData> => {
     const { default: ora } = await import('ora');
 
     const naturalLanguageQuery = await input({
         message: `Describe what issues you want to work on ${query ? '[click tab to edit]' : ''}`,
-        default: query,
+        default: query?.naturalLanguage,
     });
     const llmSpinner = ora('Generating query').start();
     const platformQuery = await AppConfig.runPrompt(
-        AppConfig.config.projectCli.getPlatformQueryPrompt(naturalLanguageQuery)
+        AppConfig.config.projectCli.getPlatformQueryPrompt(naturalLanguageQuery),
     );
     llmSpinner.succeed('Query generated!');
 
-    const refinedPlatformQuery = await enterPlatformQueryLoop(platformQuery);
-    const tasksSpinner = ora('Fetching tasks').start();
-    const tasks = await AppConfig.config.projectCli.fetchTasksByQuery(refinedPlatformQuery);
-    tasksSpinner.succeed('Tasks fetched!');
+    const {
+        query: refinedPlatformQuery,
+        save: saveInFavourites,
+    } = await enterPlatformQueryLoop(platformQuery);
+
+    if (saveInFavourites) {
+        await FavouriteQueryStorage.saveFavourite({
+            naturalLanguage: naturalLanguageQuery,
+            platformQuery: refinedPlatformQuery,
+            platformType: AppConfig.config.projectCli.type,
+        });
+        ora().succeed('Query saved in favourites!');
+    }
+
+    return {
+        query: refinedPlatformQuery,
+        naturalLanguage: naturalLanguageQuery,
+    };
+};
+
+interface QueryData {
+    query: string;
+    naturalLanguage: string;
+}
+
+const enterQuerySelection = async (queryData?: QueryData): Promise<GenericTask> => {
+    let newQueryOrFavourite: 'new' | 'favourite' = 'new';
+
+    if (!queryData) {
+        newQueryOrFavourite = ((await select<'new' | 'favourite'>({
+            message: 'Select issue',
+            choices: [
+                {
+                    name: 'Create new query',
+                    value: 'new',
+                },
+                {
+                    name: 'Select from favourites',
+                    value: 'favourite',
+                },
+            ],
+        })));
+    }
+
+    if (newQueryOrFavourite === 'favourite') {
+        const favourites = FavouriteQueryStorage.getFavouritesForPlatform(AppConfig.config.projectCli.type);
+
+        if (!favourites.length) {
+            console.log('No favourites found');
+            queryData = await enterNaturalLanguageQueryLoop();
+        } else {
+            const selectedFavouriteOrAction = await select<FavouriteQuery | 'abort'>({
+                message: 'Select query',
+                choices: [
+                    ...favourites
+                        .sort((a, b) => (b.lastUsed || 0) - (a.lastUsed || 0))
+                        .map(favourite => ({
+                            name: favourite.naturalLanguage,
+                            value: favourite,
+                        })),
+                    {
+                        name: 'Abort',
+                        value: 'abort',
+                    }
+                ],
+            });
+
+            if (selectedFavouriteOrAction === 'abort') {
+                return enterQuerySelection();
+            }
+
+            await FavouriteQueryStorage.updateUsage(selectedFavouriteOrAction);
+
+            queryData = {
+                query: selectedFavouriteOrAction.platformQuery,
+                naturalLanguage: selectedFavouriteOrAction.naturalLanguage,
+            };
+        }
+    }
+    else {
+        queryData = await enterNaturalLanguageQueryLoop(queryData);
+    }
+
+    const tasks = await fetchTasksByQueryAndShowIndicator(queryData?.query);
 
     const taskOrAction = ((await select<GenericTask | 'edit' | 'abort'>({
         message: 'Select issue',
@@ -72,12 +180,12 @@ const enterNaturalLanguageQueryLoop = async (query?: string): Promise<GenericTas
                 value: 'abort',
             },
         ],
-        loop: false,
+        loop: true,
     })));
 
     switch (taskOrAction) {
         case 'edit':
-            return await enterNaturalLanguageQueryLoop(naturalLanguageQuery);
+            return await enterQuerySelection(queryData);
         case 'abort':
             throw new Error('Aborted');
         default:
@@ -96,7 +204,7 @@ const enterBranchNameLoop = async (generatedBranchName: string, errored?: boolea
     }
 
     return branchName;
-}
+};
 
 async function action(issueId?: string, options?: { update: boolean }) {
     const { default: ora } = await import('ora');
@@ -138,9 +246,8 @@ async function action(issueId?: string, options?: { update: boolean }) {
     let task: GenericTask;
 
     if (!issueId) {
-        task = await enterNaturalLanguageQueryLoop();
-    }
-    else {
+        task = await enterQuerySelection();
+    } else {
         const tempTask = await AppConfig.config.projectCli.fetchTaskById(issueId);
 
         if (!tempTask) {
@@ -159,7 +266,7 @@ async function action(issueId?: string, options?: { update: boolean }) {
     const branchNameSpinner = ora('Generating branch name').start();
 
     const generatedBranchName = await AppConfig.runPrompt(
-        AppConfig.config.vcsCli.getBranchNamePrompt(task, changeType)
+        AppConfig.config.vcsCli.getBranchNamePrompt(task, changeType),
     );
 
     branchNameSpinner.succeed('Branch name generated!');

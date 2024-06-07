@@ -132,6 +132,7 @@ export class JiraCli<T extends JiraIssue = JiraIssue> implements ProjectCli {
     filters: FilterField<any>[] = [];
     taskFields: TaskField<any>[] = [];
     public readonly options: JiraCliOptions;
+    public readonly type = 'jira';
 
     constructor(
         options: Partial<JiraCliOptions> = {}

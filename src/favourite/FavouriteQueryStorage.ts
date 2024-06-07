@@ -5,6 +5,7 @@ export interface FavouriteQuery {
     naturalLanguage: string
     platformQuery: string
     platformType: string
+    lastUsed?: number
 }
 
 export class FavouriteQueryStorage {
@@ -19,13 +20,21 @@ export class FavouriteQueryStorage {
         return this.favouriteQueries.filter(fav => fav.platformType === type);
     }
 
+    static async updateUsage(query: FavouriteQuery) {
+        this.favouriteQueries.find(fav => fav.platformQuery === query.platformQuery)!.lastUsed = Date.now();
+        await this.saveFile();
+    }
+
     static async deleteFavourite(query: FavouriteQuery) {
         this.favouriteQueries = this.favouriteQueries.filter(fav => fav.platformQuery !== query.platformQuery);
         await this.saveFile();
     }
 
     static async saveFavourite(query: FavouriteQuery) {
-        this.favouriteQueries.push(query);
+        this.favouriteQueries.push({
+            ...query,
+            lastUsed: Date.now()
+        });
         await this.saveFile();
     }
 

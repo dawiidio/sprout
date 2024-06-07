@@ -7,9 +7,11 @@ import { commitCmd } from '~/command/commit';
 import { AppConfig } from '~/config';
 import { CommandOptionsStorage, isCliInDevMode, logger } from '~/common';
 import { ILoggerConfigString, Logger } from '@dawiidio/tools/lib/node/Logger/Logger';
+import { FavouriteQueryStorage } from '~/favourite/FavouriteQueryStorage';
 
 async function main() {
     await AppConfig.load();
+    await FavouriteQueryStorage.load();
     const defaultLogLevel: ILoggerConfigString = isCliInDevMode() ? 'debug|error|info|warn' : 'error|warn';
     logger.setLogLevel(Logger.parseLogLevel(defaultLogLevel as ILoggerConfigString))
 

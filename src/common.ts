@@ -3,13 +3,12 @@ import { exec } from 'node:child_process';
 import process from 'process';
 import { MAIN_BRANCH_NAME } from './config';
 import dotenv from 'dotenv';
-import { join } from 'path';
-import { homedir } from 'os';
 import { ILoggerConfigString, Logger, LogLevel } from '@dawiidio/tools/lib/node/Logger/Logger';
 import { Prompt } from './llm/Prompt';
 import { ValidationError } from 'yup';
 import { Descriptable } from './llm/Descriptable';
 import { format } from 'date-fns';
+import { PATH_TO_GLOBAL_ENV, PATH_TO_LOCAL_ENV } from './consts';
 
 export type ChangeType = 'feat' | 'fix' | 'chore' | 'refactor' | 'style' | 'test' | 'docs'
 
@@ -70,8 +69,6 @@ export const isMainBranch = async () =>
 
 export const isCliInDevMode = () => process.env.SPROUT_DEV === 'true';
 
-const CLI_NAME = 'sprout';
-
 const local = isCliInDevMode() ? ['.env.local', '.env'] : [];
 
 export class Env {
@@ -93,8 +90,8 @@ export class Env {
         dotenv.config({
             path: [
                 ...local,
-                join(process.cwd(), `.${CLI_NAME}.env`),
-                join(homedir(), `.${CLI_NAME}.env`),
+                PATH_TO_LOCAL_ENV,
+                PATH_TO_GLOBAL_ENV
             ],
         });
     }
