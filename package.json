@@ -1,0 +1,37 @@
+{
+  "name": "kg",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc && tsc-alias",
+    "build:watch": "(concurrently \"tsc -w\" \"tsc-alias -w\")",
+    "dev": "SPROUT_DEV=true node dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@dawiidio/tools": "^0.7.3",
+    "@inquirer/prompts": "^3.3.2",
+    "@types/mustache": "^4.2.5",
+    "chalk": "^5.3.0",
+    "commander": "^11.1.0",
+    "date-fns": "^3.6.0",
+    "dotenv": "^16.4.1",
+    "mustache": "^4.2.0",
+    "ollama": "^0.5.1",
+    "ora": "^8.0.1",
+    "tsc": "^2.0.4",
+    "typescript": "^5.3.3",
+    "yup": "^1.4.0",
+    "zx": "^7.2.3"
+  },
+  "devDependencies": {
+    "@types/commander": "^2.12.2",
+    "@types/dotenv": "^8.2.0",
+    "@types/node": "^20.11.13",
+    "concurrently": "^8.2.2",
+    "tsc-alias": "^1.8.8"
+  }
+}

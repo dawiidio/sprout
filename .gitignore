@@ -1,0 +1,8 @@
+.env.local
+.idea
+.sprout-tmp
+dist
+package-lock.json
+yarn.lock
+node_modules
+.env.template

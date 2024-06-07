@@ -1,0 +1,25 @@
+{
+    "exclude": ["**/*.spec.ts"],
+    "include": ["src/**/*.ts"],
+    "compilerOptions": {
+        "lib": ["DOM", "DOM.Iterable", "ES2021"],
+        "types": [
+            "node"
+        ],
+        "esModuleInterop": true,
+        "strict": true,
+        "baseUrl": ".",
+        "paths": {
+            "~/*": ["src/*"],
+            "test/*": ["test/*"]
+        },
+        "forceConsistentCasingInFileNames": true,
+        "downlevelIteration": true,
+        "skipLibCheck": true,
+        "removeComments": true,
+        "rootDir": "src",
+        "module": "NodeNext",
+        "target": "ES2022",
+        "outDir": "dist"
+    }
+}
