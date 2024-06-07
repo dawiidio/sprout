@@ -2,14 +2,7 @@ import type { Prompt } from '../llm/Prompt';
 import type { GenericTask } from '../project/ProjectCli';
 import { ChangeType } from '../common';
 
-export interface VcsCliPrompts {
-    [key: string]: Prompt<any>
-    taskToBranchName: Prompt<{ task: string, branchNamingRules: string, changeType: ChangeType }>;
-}
-
 export interface VcsCli {
-    prompts: VcsCliPrompts
-
     saveChanges(message: string): Promise<void>;
     checkout(branch: string): Promise<void>;
     push(): Promise<void>;
@@ -17,7 +10,7 @@ export interface VcsCli {
     getCurrentBranchName(): Promise<string>;
     isMainBranch(): Promise<boolean>;
     checkoutToMainBranch(): Promise<string>;
-    getBranchNamePromptContent(task: GenericTask, changeType: ChangeType): string;
+    getBranchNamePrompt(task: GenericTask, changeType: ChangeType): Prompt<any>;
     testBranchName(branchName: string): boolean;
     updateMainBranch(): Promise<void>;
 }

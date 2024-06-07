@@ -50,10 +50,10 @@ export class AppConfig {
         return true;
     }
 
-    static getLlmCliForPrompt(prompt: Prompt<any>) {
+    static runPrompt(prompt: Prompt<any>): Promise<string> {
         this.ensureConfig();
 
-        return this.config.llmCli[prompt.type];
+        return this.config.llmCli[prompt.type].sendPrompt(prompt);
     }
 }
 

@@ -2,6 +2,7 @@
 
 import { program } from 'commander';
 import { openCmd } from '~/command/open';
+import { initCmd } from '~/command/init';
 import { commitCmd } from '~/command/commit';
 import { AppConfig } from '~/config';
 import { CommandOptionsStorage, isCliInDevMode, logger } from '~/common';
@@ -25,6 +26,7 @@ async function main() {
             return true;
         },  false)
         .addCommand(openCmd)
+        .addCommand(initCmd)
         .addCommand(commitCmd);
 
     program.parse();

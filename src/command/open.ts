@@ -8,7 +8,7 @@ import { GenericTask } from '~/project/ProjectCli';
 const enterPlatformQueryLoop = async (query: string, editLoop = false): Promise<string> => {
     if (editLoop) {
         query = await input({
-            message: 'Edit query (click tab to edit)',
+            message: 'Edit query [click tab to edit]',
             default: query,
         })
     }
@@ -45,15 +45,16 @@ const enterNaturalLanguageQueryLoop = async (query?: string): Promise<GenericTas
     const { default: ora } = await import('ora');
 
     const naturalLanguageQuery = await input({
-        message: `Describe what issues you want to work on ${query ? '(click tab to edit)' : ''}`,
+        message: `Describe what issues you want to work on ${query ? '[click tab to edit]' : ''}`,
         default: query,
     });
     const llmSpinner = ora('Generating query').start();
-    const llm = AppConfig.getLlmCliForPrompt(AppConfig.config.projectCli.prompts.naturalLanguageQuery);
-    const generatedPlatformQuery = await AppConfig.config.projectCli.generatePlatformQuery(naturalLanguageQuery, llm);
+    const platformQuery = await AppConfig.runPrompt(
+        AppConfig.config.projectCli.getPlatformQueryPrompt(naturalLanguageQuery)
+    );
     llmSpinner.succeed('Query generated!');
 
-    const refinedPlatformQuery = await enterPlatformQueryLoop(generatedPlatformQuery);
+    const refinedPlatformQuery = await enterPlatformQueryLoop(platformQuery);
     const tasksSpinner = ora('Fetching tasks').start();
     const tasks = await AppConfig.config.projectCli.fetchTasksByQuery(refinedPlatformQuery);
     tasksSpinner.succeed('Tasks fetched!');
@@ -86,7 +87,7 @@ const enterNaturalLanguageQueryLoop = async (query?: string): Promise<GenericTas
 
 const enterBranchNameLoop = async (generatedBranchName: string, errored?: boolean): Promise<string> => {
     const branchName = await input({
-        message: errored ? `Fix branch name` : `Branch name looks okay?`,
+        message: errored ? `Fix branch name` : `Branch name looks okay? [click tab to edit]`,
         default: generatedBranchName,
     });
 
@@ -155,14 +156,12 @@ async function action(issueId?: string, options?: { update: boolean }) {
         choices: CHANGE_TYPE_OPTIONS,
     });
 
-    const promptText = AppConfig.config.vcsCli.getBranchNamePromptContent(
-        task,
-        changeType
-    );
-    const llm = AppConfig.getLlmCliForPrompt(AppConfig.config.vcsCli.prompts.taskToBranchName);
     const branchNameSpinner = ora('Generating branch name').start();
 
-    const generatedBranchName = await llm.sendPrompt(promptText);
+    const generatedBranchName = await AppConfig.runPrompt(
+        AppConfig.config.vcsCli.getBranchNamePrompt(task, changeType)
+    );
+
     branchNameSpinner.succeed('Branch name generated!');
 
     const branchName = await enterBranchNameLoop(generatedBranchName);

@@ -1,11 +1,6 @@
 import { FilterField } from '../project/FilterField';
 import { TaskField } from '../project/TaskField';
-import { LLMCli } from '../llm/LLMCli';
 import { Prompt } from '../llm/Prompt';
-
-export interface ProjectCliPrompts {
-    naturalLanguageQuery: Prompt<any>
-}
 
 export interface GenericTask {
     id: string;
@@ -25,9 +20,8 @@ export interface GenericTask {
 export interface ProjectCli {
     filters: FilterField<any>[];
     taskFields: TaskField<any>[];
-    prompts: ProjectCliPrompts;
 
-    generatePlatformQuery(query: string, llm: LLMCli): Promise<string>;
+    getPlatformQueryPrompt(query: string): Prompt<any>;
 
     fetchTasksByQuery(query: string): Promise<GenericTask[]>;
 

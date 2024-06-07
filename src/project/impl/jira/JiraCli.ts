@@ -1,11 +1,10 @@
-import { GenericTask, ProjectCli, ProjectCliPrompts } from '../../../project/ProjectCli';
+import { GenericTask, ProjectCli } from '../../../project/ProjectCli';
 import { JiraFetchOptions, JiraIssue, FetchIssuesOptions, JiraIssuesResponse } from '../../../project/impl/jira/JiraTypes';
 import { FilterField, FilterFieldOption } from '../../../project/FilterField';
 import { TaskField } from '../../../project/TaskField';
 import { UrlTransferableDataTypesObject } from '@dawiidio/tools/lib/node/URL/UrlTransferableDataTypes';
 import { UrlSearchParamsParser } from '@dawiidio/tools/lib/node/URL/SearchParams/UrlSearchParamsParser';
-import { LLMCli } from '../../../llm/LLMCli';
-import { queryToJql } from '../../../project/impl/jira/prompts/queryToJql';
+import { QueryToJqlPrompt } from './prompts/QueryToJqlPrompt';
 import { CommandOptionsStorage, DescriptableDate, Env, logger, promptInstanceCheck } from '../../../common';
 import { object, string, array, ValidationError } from 'yup';
 
@@ -24,7 +23,6 @@ export interface JiraCliOptions {
     defaultProjectKey: string;
     filters: FilterField<any>[];
     fields: TaskField<JiraIssue>[];
-    prompts: ProjectCliPrompts;
 }
 
 const filterFieldInstanceCheck = (value: any) => {
@@ -130,15 +128,10 @@ export const DEFAULT_JIRA_TASK_FIELDS = [
     new TaskField('type', 'type'),
 ];
 
-export const DEFAULT_JIRA_PROMPTS: ProjectCliPrompts = {
-    naturalLanguageQuery: queryToJql,
-}
-
 export class JiraCli<T extends JiraIssue = JiraIssue> implements ProjectCli {
     filters: FilterField<any>[] = [];
     taskFields: TaskField<any>[] = [];
     public readonly options: JiraCliOptions;
-    prompts: ProjectCliPrompts;
 
     constructor(
         options: Partial<JiraCliOptions> = {}
@@ -157,7 +150,6 @@ export class JiraCli<T extends JiraIssue = JiraIssue> implements ProjectCli {
         this.filters = options.filters || DEFAULT_JIRA_FILTERS;
         // @ts-ignore
         this.taskFields = options.fields || DEFAULT_JIRA_TASK_FIELDS;
-        this.prompts = options.prompts || DEFAULT_JIRA_PROMPTS;
     }
 
 
@@ -199,16 +191,14 @@ export class JiraCli<T extends JiraIssue = JiraIssue> implements ProjectCli {
         }) as T) || [];
     }
 
-    async generatePlatformQuery(naturalLanguageQuery: string, llm: LLMCli): Promise<string> {
-        const prompt = this.prompts.naturalLanguageQuery.getPromptText({
-            fields: '*all',
-            user: naturalLanguageQuery,
+    getPlatformQueryPrompt(naturalLanguageQuery: string): QueryToJqlPrompt {
+        return new QueryToJqlPrompt({
+            fields: this.filters,
+            query: naturalLanguageQuery,
             date: new DescriptableDate({
                 format: JIRA_DATE_FORMAT
-            }),
+            }).toString(),
         });
-
-        return llm.sendPrompt(prompt);
     }
 
     async fetchTasksByQuery(jql: string): Promise<GenericTask[]> {

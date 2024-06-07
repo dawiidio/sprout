@@ -12,6 +12,6 @@ const action = async (options: CommandOptions & CommonCommandOptions) => {
     await writeFile(FAVOURITES_FILE_PATH, '[]');
 };
 
-export const commitCmd = new Command('init')
+export const initCmd = new Command('init')
     .alias('i')
     .action(action);

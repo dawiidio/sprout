@@ -2,14 +2,15 @@ import mustache from 'mustache';
 
 export type PromptType = 'text' | 'code';
 
-export class Prompt<R> {
-    constructor(
-        public prompt: string,
-        public type: PromptType = 'text',
-    ) {
-    }
+export abstract class Prompt<R> {
+    abstract prompt: string
+    public readonly type: PromptType = 'text';
 
-    getPromptText(variables: Record<string, any> & R): string {
-        return mustache.render(this.prompt, variables);
+    constructor(
+        public variables: Record<string, any> & R,
+    ) {}
+
+    toString(): string {
+        return mustache.render(this.prompt, this.variables);
     }
 }
