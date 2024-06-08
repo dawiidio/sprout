@@ -5,10 +5,6 @@ import { ENV_FILE_NAME, FAVOURITES_FILE_PATH, HOME_DIR_PATH, PATH_TO_CONFIG_FILE
 import process from 'process';
 import { join } from 'path';
 
-interface CommandOptions {
-    global: boolean;
-}
-
 const SAMPLE_CONFIG = `
 import { 
     SproutConfigFunction, 
@@ -42,11 +38,14 @@ JIRA_URL=https://your-domain.atlassian.net
 OPENAI_API_KEY=sk-api-key
 `;
 
-const action = async (options: CommandOptions & CommonCommandOptions) => {
+const action = async (options: CommonCommandOptions) => {
+    if (options.dryRun) {
+        throw new Error(`Dry run is not supported for init command`);
+    }
+
     await runWithIndicator('Installing sprout locally', 'Sprout installed', async () => {
         await asyncExec('npm i -d @dawiidio/sprout');
     });
-
 
     try {
         await access(HOME_DIR_PATH);
