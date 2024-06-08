@@ -96,13 +96,3 @@ const compileTs = (compileSettings: ICompileTsSettings): Promise<string> => {
         });
     });
 };
-
-export const {
-    JIRA_API_KEY,
-    JIRA_EMAIL,
-    JIRA_URL,
-    JIRA_DEFAULT_PROJECT_KEY,
-} = process.env;
-
-export const MAIN_BRANCH_NAME = 'master';
-export const ADD_BEFORE_COMMIT = true;

@@ -104,4 +104,8 @@ export class GitCli implements VcsCli {
     formatCommitMessage(changeType: ChangeType, message: string): string {
         return `${changeType}: ${message}`;
     }
+
+    async isIssueBranch() {
+        return this.testBranchName(await this.getCurrentBranchName());
+    }
 }

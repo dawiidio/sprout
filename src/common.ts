@@ -1,7 +1,6 @@
 import { promisify } from 'node:util';
 import { exec } from 'node:child_process';
 import process from 'process';
-import { MAIN_BRANCH_NAME } from './config';
 import dotenv from 'dotenv';
 import { ILoggerConfigString, Logger, LogLevel } from '@dawiidio/tools/lib/node/Logger/Logger';
 import { Prompt } from './llm/Prompt';
@@ -29,43 +28,7 @@ export const CHANGE_TYPE_OPTIONS = Object.entries(CHANGE_TYPES_DESCRIPTION).map(
     description,
 }));
 
-export const BRANCH_NAME_REGEX = /(?<changeType>feat|fix)\/(?<issueKey>\w+-\d+)_(?<name>[\w\d\-_]+)/gm;
-
-export const isIssueBranch = (branchName: string) => BRANCH_NAME_REGEX.test(branchName);
-
-export const createBranchName = (type: ChangeType, issueKey: string, name: string) =>
-    `${type}/RB-${issueKey}_${name}`;
-
-export const splitBranchName = (branchName: string) => {
-    const val = branchName.matchAll(BRANCH_NAME_REGEX).next();
-
-    if (!val.value)
-        throw new Error(`Wrong branch format`);
-
-    return val.value.groups as {
-        changeType: ChangeType
-        issueKey: string
-        name: string
-    };
-};
-
 export const asyncExec = promisify(exec);
-
-export const getCurrentBranchName = async () =>
-    (await asyncExec(`git branch --show-current`, {
-        cwd: process.cwd(),
-    })).stdout.trim();
-
-export const checkoutToMainBranch = async () => {
-    await asyncExec(`git checkout ${MAIN_BRANCH_NAME}`, {
-        cwd: process.cwd(),
-    });
-
-    return MAIN_BRANCH_NAME;
-};
-
-export const isMainBranch = async () =>
-    (await getCurrentBranchName()) === MAIN_BRANCH_NAME;
 
 export const isCliInDevMode = () => process.env.SPROUT_DEV === 'true';
 

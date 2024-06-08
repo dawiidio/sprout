@@ -26,6 +26,7 @@ export interface VcsCli {
     summarizeCurrentChanges(): Promise<string>;
     getCurrentBranchName(): Promise<string>;
     isMainBranch(): Promise<boolean>;
+    isIssueBranch(): Promise<boolean>;
     checkoutToMainBranch(): Promise<string>;
     getBranchNamePrompt(task: GenericTask, changeType: ChangeType): Prompt<any>;
     testBranchName(branchName: string): boolean;

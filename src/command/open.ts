@@ -2,7 +2,7 @@ import select from '@inquirer/select';
 import input from '@inquirer/input';
 import { Command } from 'commander';
 import { AppConfig } from '~/config';
-import { CHANGE_TYPE_OPTIONS, ChangeType, CommandOptionsStorage, isIssueBranch } from '~/common';
+import { CHANGE_TYPE_OPTIONS, ChangeType, CommandOptionsStorage, runWithIndicator } from '~/common';
 import { GenericTask } from '~/project/ProjectCli';
 import { FavouriteQuery, FavouriteQueryStorage } from '~/favourite/FavouriteQueryStorage';
 
@@ -207,20 +207,19 @@ const enterBranchNameLoop = async (generatedBranchName: string, errored?: boolea
 };
 
 async function action(issueId?: string, options?: { update: boolean }) {
-    const { default: ora } = await import('ora');
-
     const currentBranchName = await AppConfig.config.vcsCli.getCurrentBranchName();
+    const { mainBranchName, updateMainBeforeCheckout } = AppConfig.config.vcsCli.options;
 
-    if (isIssueBranch(currentBranchName)) {
+    if (await AppConfig.config.vcsCli.isIssueBranch()) {
         const nextStep = await select<'fromCurrent' | 'fromMaster' | 'abort'>({
             message: `You are currently on issue branch ${currentBranchName} - choose what to do next`,
             choices: [
                 {
-                    name: 'Create branch from master',
+                    name: `Checkout and create new branch from ${mainBranchName}`,
                     value: 'fromMaster',
                 },
                 {
-                    name: 'Create branch from current',
+                    name: 'Create new branch from current one',
                     value: 'fromCurrent',
                 },
                 {
@@ -263,21 +262,21 @@ async function action(issueId?: string, options?: { update: boolean }) {
         choices: CHANGE_TYPE_OPTIONS,
     });
 
-    const branchNameSpinner = ora('Generating branch name').start();
-
-    const generatedBranchName = await AppConfig.runPrompt(
-        AppConfig.config.vcsCli.getBranchNamePrompt(task, changeType),
-    );
-
-    branchNameSpinner.succeed('Branch name generated!');
+    const generatedBranchName = await runWithIndicator('Generating branch name', 'Branch name generated', async () => {
+        return AppConfig.runPrompt(
+            AppConfig.config.vcsCli.getBranchNamePrompt(task, changeType),
+        );
+    });
 
     const branchName = await enterBranchNameLoop(generatedBranchName);
 
     if (CommandOptionsStorage.dryRun)
         return;
 
-    if (await AppConfig.config.vcsCli.isMainBranch() && options?.update) {
-        await AppConfig.config.vcsCli.updateMainBranch();
+    if (await AppConfig.config.vcsCli.isMainBranch() && (options?.update || updateMainBeforeCheckout)) {
+        await runWithIndicator('Updating main branch', 'Main branch updated', async () => {
+            await AppConfig.config.vcsCli.updateMainBranch();
+        });
     }
 
     await AppConfig.config.vcsCli.checkout(branchName);
