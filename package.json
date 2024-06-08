@@ -1,16 +1,33 @@
 {
-  "name": "kg",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "sprout",
+  "version": "0.0.1",
+  "description": "Small CLI tool to automate your workflow",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsc && tsc-alias",
     "build:watch": "(concurrently \"tsc -w\" \"tsc-alias -w\")",
     "dev": "SPROUT_DEV=true node dist/index.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["jira", "cli", "sprout", "tools", "dawiidio", "git", "workflow", "automation", "typescript", "node", "cli", "command-line", "interface", "ai", "task", "issue"],
+  "author": {
+    "email": "dawid@dawiid.io",
+    "name": "Dawid Wojda",
+    "url": "https://dawiid.io"
+  },
+  "bin": {
+    "pli": "dist/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dawiidio/sprout"
+  },
+  "files": [
+    "dist",
+    "package.json"
+  ],
+  "private": false,
+  "types": "dist/exports.d.ts",
+  "license": "MIT",
   "dependencies": {
     "@dawiidio/tools": "^0.7.3",
     "@inquirer/prompts": "^3.3.2",
