@@ -23,18 +23,18 @@ export class AppConfig {
     static async load() {
         Env.loadEnv();
 
-        const pathToCompiledFile = await compileTs({
-            outDir: join(TMP_DIR),
-            rootDir: process.cwd(),
-            configPath: CONFIG_FILE_NAME,
-        });
-
         try {
             await access(join(process.cwd(), 'node_modules'))
         }
         catch {
             await symlink(join(process.cwd(), 'node_modules'), join(TMP_DIR, 'node_modules'), 'dir');
         }
+
+        const pathToCompiledFile = await compileTs({
+            outDir: join(TMP_DIR),
+            rootDir: join(TMP_DIR),
+            configPath: CONFIG_FILE_NAME,
+        });
 
         const {
             getConfig,
