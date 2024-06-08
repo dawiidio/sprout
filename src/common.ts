@@ -172,3 +172,14 @@ export class DescriptableDate implements Descriptable {
     }
 }
 
+export const runWithIndicator = async <T>(message: string, successMsg: string, action: (() => Promise<T>)) => {
+    const { default: ora } = await import('ora');
+
+    const indicator = ora(message).start();
+
+    const results = await action();
+
+    indicator.succeed(successMsg);
+
+    return results;
+}

@@ -2,7 +2,7 @@ import select from '@inquirer/select';
 import input from '@inquirer/input';
 import { Command } from 'commander';
 import { AppConfig } from '~/config';
-import { CHANGE_TYPE_OPTIONS, ChangeType, isIssueBranch } from '~/common';
+import { CHANGE_TYPE_OPTIONS, ChangeType, CommandOptionsStorage, isIssueBranch } from '~/common';
 import { GenericTask } from '~/project/ProjectCli';
 import { FavouriteQuery, FavouriteQueryStorage } from '~/favourite/FavouriteQueryStorage';
 
@@ -272,6 +272,9 @@ async function action(issueId?: string, options?: { update: boolean }) {
     branchNameSpinner.succeed('Branch name generated!');
 
     const branchName = await enterBranchNameLoop(generatedBranchName);
+
+    if (CommandOptionsStorage.dryRun)
+        return;
 
     if (await AppConfig.config.vcsCli.isMainBranch() && options?.update) {
         await AppConfig.config.vcsCli.updateMainBranch();

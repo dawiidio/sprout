@@ -1,12 +1,21 @@
 import { join } from 'node:path';
 import { symlink, access } from 'node:fs/promises';
 import { exec } from 'node:child_process';
-import { Config } from './types';
 import { Env } from './common';
-import { Prompt } from './llm/Prompt';
+import { Prompt, PromptType } from './llm/Prompt';
 import process from 'process';
-import { CONFIG_FILE_NAME, PATH_TO_CONFIG_FILE, TMP_DIR } from './consts';
+import { CONFIG_FILE_NAME, TMP_DIR } from './consts';
+import { type ProjectCli } from './project/ProjectCli';
+import { type LLMCli } from './llm/LLMCli';
+import { type VcsCli } from './vsc/VcsCli';
+import { type TaskRenderer } from './cli/TaskRenderer';
 
+export interface Config {
+    projectCli: ProjectCli;
+    llmCli: Record<PromptType, LLMCli>
+    vcsCli: VcsCli;
+    taskRenderer: TaskRenderer;
+}
 
 export class AppConfig {
     static config: Config;

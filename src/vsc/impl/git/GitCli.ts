@@ -1,28 +1,23 @@
-import { VcsCli } from '../../../vsc/VcsCli';
-import { asyncExec, ChangeType } from '../../../common';
+import { VcsCli, VcsCliOptions } from '../../../vsc/VcsCli';
+import { asyncExec, CHANGE_TYPES, ChangeType } from '../../../common';
 import process from 'process';
 import { GenericTask } from '../../../project/ProjectCli';
 import { GitIssueBranch } from '../../../vsc/impl/git/GitIssueBranch';
 import { IssueToBranchNamePrompt } from '../../../vsc/impl/git/prompts/IssueToBranchNamePrompt';
+import { DiffToCommitMessage } from './prompts/DiffToCommitMessage';
 
-export interface GitCliOptions {
-    mainBranchName: string;
-    addBeforeCommit: boolean;
-    updateMainBeforeCheckout: boolean;
-    pushAfterCommit: boolean;
-}
-
-export const DEFAULT_GIT_CLI_OPTIONS: GitCliOptions = {
+export const DEFAULT_GIT_CLI_OPTIONS: VcsCliOptions = {
     mainBranchName: 'main',
     addBeforeCommit: true,
     updateMainBeforeCheckout: true,
     pushAfterCommit: true,
+    useLlmToSummarizeChanges: true,
 };
 
 export class GitCli implements VcsCli {
-    readonly options: GitCliOptions;
+    readonly options: VcsCliOptions;
 
-    constructor(options: Partial<GitCliOptions> = {}) {
+    constructor(options: Partial<VcsCliOptions> = {}) {
         this.options = {
             ...DEFAULT_GIT_CLI_OPTIONS,
             ...options,
@@ -30,23 +25,19 @@ export class GitCli implements VcsCli {
     }
 
     async commit(message: string) {
-        if (this.options.addBeforeCommit) {
-            await asyncExec('git add .');
-        }
-
-        await asyncExec(`git commit -m "${message}"`);
-
-        if (this.options.pushAfterCommit) {
-            await this.push();
-        }
+        await asyncExec(`git commit -m "${message.replace('"', '\"')}}"`);
     }
 
     async checkout(branchName: string) {
-        await asyncExec(`git checkout ${branchName}`);
+        await asyncExec(`git checkout -b ${branchName}`);
     }
 
     async push() {
-        await asyncExec(`git push`);
+        return  (await asyncExec(`git push origin ${await this.getCurrentBranchName()}`)).stdout;
+    }
+
+    async add() {
+        await asyncExec('git add .');
     }
 
     async summarizeCurrentChanges(): Promise<string> {
@@ -58,6 +49,12 @@ export class GitCli implements VcsCli {
             task: JSON.stringify(task, null, 2),
             branchNamingRules: GitIssueBranch.toDescription(),
             changeType
+        });
+    }
+
+    async getChangesDescriptionPrompt(): Promise<DiffToCommitMessage> {
+        return new DiffToCommitMessage({
+            diff: (await asyncExec('git diff')).stdout,
         });
     }
 
@@ -93,5 +90,18 @@ export class GitCli implements VcsCli {
         if (await this.isMainBranch()) {
             await asyncExec(`git pull origin ${this.options.mainBranchName}`);
         }
+    }
+
+    getBranchData(branchName: string) {
+        return GitIssueBranch.fromString(branchName);
+    }
+
+    validateCommitMessage(message: string): boolean {
+        const regex = new RegExp(`^(${CHANGE_TYPES.join('|')}): .+`, 'gm');
+        return regex.test(message);
+    }
+
+    formatCommitMessage(changeType: ChangeType, message: string): string {
+        return `${changeType}: ${message}`;
     }
 }

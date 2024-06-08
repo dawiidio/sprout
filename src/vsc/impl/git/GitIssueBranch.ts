@@ -1,6 +1,7 @@
 import { CHANGE_TYPES, ChangeType } from '../../../common';
+import { type VcsBranchData } from '../../VcsCli';
 
-export class GitIssueBranch {
+export class GitIssueBranch implements VcsBranchData {
 
     constructor(
         public changeType: ChangeType,
@@ -23,11 +24,7 @@ export class GitIssueBranch {
 
         const {
             issueId, desc, changeType
-        } =  val.value.groups as {
-            changeType: ChangeType
-            issueId: string
-            desc: string
-        };
+        } =  val.value.groups as VcsBranchData;
 
         return new GitIssueBranch(changeType, issueId, desc);
     }
