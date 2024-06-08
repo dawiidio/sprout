@@ -1,12 +1,13 @@
 {
-  "name": "sprout",
+  "name": "@dawiidio/sprout",
   "version": "0.0.4",
   "description": "Small CLI tool to automate your workflow",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc && tsc-alias",
     "build:watch": "(concurrently \"tsc -w\" \"tsc-alias -w\")",
-    "dev": "SPROUT_DEV=true node dist/index.js"
+    "dev": "SPROUT_DEV=true node dist/index.js",
+    "prepublish": "npm run build"
   },
   "keywords": [
     "jira",
@@ -32,7 +33,7 @@
     "url": "https://dawiid.io"
   },
   "bin": {
-    "pli": "dist/index.js"
+    "sprout": "dist/index.js"
   },
   "repository": {
     "type": "git",
@@ -57,7 +58,6 @@
     "ollama": "^0.5.1",
     "openai": "^4.49.1",
     "ora": "^8.0.1",
-    "tsc": "^2.0.4",
     "typescript": "^5.3.3",
     "yup": "^1.4.0",
     "zx": "^7.2.3"
