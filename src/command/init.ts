@@ -1,14 +1,7 @@
 import { Command } from 'commander';
 import { asyncExec, CommonCommandOptions, runWithIndicator } from '~/common';
-import { writeFile, mkdir, access, appendFile } from 'node:fs/promises';
-import {
-    ENV_FILE_NAME,
-    FAVOURITES_FILE_PATH,
-    HOME_DIR_PATH,
-    PATH_TO_CONFIG_FILE,
-    PATH_TO_GLOBAL_ENV,
-    PATH_TO_LOCAL_ENV,
-} from '~/consts';
+import { access, appendFile, mkdir, writeFile } from 'node:fs/promises';
+import { ENV_FILE_NAME, FAVOURITES_FILE_PATH, HOME_DIR_PATH, PATH_TO_CONFIG_FILE, PATH_TO_LOCAL_ENV } from '~/consts';
 import process from 'process';
 import { join } from 'path';
 
@@ -54,24 +47,20 @@ const action = async (options: CommandOptions & CommonCommandOptions) => {
         await asyncExec('npm i -d @dawiidio/sprout');
     });
 
-    if (options.global) {
+
+    try {
+        await access(HOME_DIR_PATH);
+    } catch {
         await runWithIndicator('Creating sprout home', `Sprout home dir created at ${HOME_DIR_PATH}`, async () => {
-            try {
-                await access(HOME_DIR_PATH);
-            }
-            catch {
-                await mkdir(HOME_DIR_PATH);
-                await writeFile(FAVOURITES_FILE_PATH, '[]');
-                await writeFile(PATH_TO_GLOBAL_ENV, SAMPLE_ENV);
-            }
+            await mkdir(HOME_DIR_PATH);
+            await writeFile(FAVOURITES_FILE_PATH, '[]');
         });
     }
 
     await runWithIndicator('Creating local sprout config', 'Sprout local config created', async () => {
         try {
             await access(PATH_TO_CONFIG_FILE);
-        }
-        catch {
+        } catch {
             await writeFile(PATH_TO_CONFIG_FILE, SAMPLE_CONFIG);
             await writeFile(PATH_TO_LOCAL_ENV, SAMPLE_ENV);
         }
@@ -82,8 +71,7 @@ const action = async (options: CommandOptions & CommonCommandOptions) => {
         try {
             await access(pathToGitIgnore);
             await appendFile(pathToGitIgnore, `\n${ENV_FILE_NAME}\n`);
-        }
-        catch {
+        } catch {
             await writeFile(pathToGitIgnore, `${ENV_FILE_NAME}\n`);
         }
     });
@@ -93,5 +81,4 @@ const action = async (options: CommandOptions & CommonCommandOptions) => {
 
 export const initCmd = new Command('init')
     .alias('i')
-    .option('-g, --global [boolean]', 'init also global config which will be shared across all projects')
     .action(action);
