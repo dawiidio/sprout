@@ -11,6 +11,7 @@ import { JiraCli, type JiraCliOptions } from './project/impl/jira/JiraCli';
 import { type Descriptable } from './llm/Descriptable';
 import { GitCli } from './vsc/impl/git/GitCli';
 import { Config } from './config';
+import { GenericTaskRenderer } from './cli/GenericTaskRenderer';
 
 type SproutConfigFunction = () => Promise<Partial<Config>> | Partial<Config>;
 
@@ -36,4 +37,5 @@ export {
     Config,
     SproutConfigFunction,
     VcsBranchData,
+    GenericTaskRenderer,
 };
