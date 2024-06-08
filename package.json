@@ -1,6 +1,6 @@
 {
   "name": "@dawiidio/sprout",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Small CLI tool to automate your workflow",
   "main": "dist/index.js",
   "scripts": {
