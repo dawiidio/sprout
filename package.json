@@ -1,6 +1,6 @@
 {
   "name": "sprout",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Small CLI tool to automate your workflow",
   "main": "dist/index.js",
   "scripts": {
@@ -8,7 +8,24 @@
     "build:watch": "(concurrently \"tsc -w\" \"tsc-alias -w\")",
     "dev": "SPROUT_DEV=true node dist/index.js"
   },
-  "keywords": ["jira", "cli", "sprout", "tools", "dawiidio", "git", "workflow", "automation", "typescript", "node", "cli", "command-line", "interface", "ai", "task", "issue"],
+  "keywords": [
+    "jira",
+    "cli",
+    "sprout",
+    "tools",
+    "dawiidio",
+    "git",
+    "workflow",
+    "automation",
+    "typescript",
+    "node",
+    "cli",
+    "command-line",
+    "interface",
+    "ai",
+    "task",
+    "issue"
+  ],
   "author": {
     "email": "dawid@dawiid.io",
     "name": "Dawid Wojda",
