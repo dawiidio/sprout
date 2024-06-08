@@ -207,6 +207,9 @@ const enterBranchNameLoop = async (generatedBranchName: string, errored?: boolea
 };
 
 async function action(issueId?: string, options?: { update: boolean }) {
+    await AppConfig.load();
+    await FavouriteQueryStorage.load();
+
     const currentBranchName = await AppConfig.config.vcsCli.getCurrentBranchName();
     const { mainBranchName, updateMainBeforeCheckout } = AppConfig.config.vcsCli.options;
 

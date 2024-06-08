@@ -9,6 +9,7 @@ import {
 import input from '@inquirer/input';
 import { AppConfig } from '~/config';
 import select from '@inquirer/select';
+import { FavouriteQueryStorage } from '~/favourite/FavouriteQueryStorage';
 
 interface CommandOptions extends CommonCommandOptions {
     push: boolean;
@@ -35,6 +36,9 @@ const enterCommitMessageLoop = async (message: string, changeType: ChangeType, e
 };
 
 const action = async (options: CommandOptions) => {
+    await AppConfig.load();
+    await FavouriteQueryStorage.load();
+
     const {
         vcsCli,
     } = AppConfig.config;
