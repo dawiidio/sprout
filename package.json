@@ -9,6 +9,9 @@
     "dev": "SPROUT_DEV=true node dist/index.js",
     "prepublish": "npm run build"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": [
     "jira",
     "cli",
