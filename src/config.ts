@@ -1,10 +1,16 @@
 import { join } from 'node:path';
-import { symlink, access } from 'node:fs/promises';
+import { access, cp, mkdir, symlink, writeFile } from 'node:fs/promises';
 import { exec } from 'node:child_process';
-import { Env } from './common';
+import { Env, isCliInDevMode } from './common';
 import { Prompt, PromptType } from './llm/Prompt';
 import process from 'process';
-import { CONFIG_FILE_NAME, TMP_DIR } from './consts';
+import {
+    CONFIG_FILE_NAME,
+    PATH_TO_CONFIG_FILE,
+    TMP_DIR,
+    SPROUT_CONFIG_FILE_TS_CONFIG,
+    SPROUT_CONFIG_FILE_PACKAGE_JSON,
+} from './consts';
 import { type ProjectCli } from './project/ProjectCli';
 import { type LLMCli } from './llm/LLMCli';
 import { type VcsCli } from './vsc/VcsCli';
@@ -12,7 +18,7 @@ import { type TaskRenderer } from './cli/TaskRenderer';
 
 export interface Config {
     projectCli: ProjectCli;
-    llmCli: Record<PromptType, LLMCli>
+    llmCli: Record<PromptType, LLMCli>;
     vcsCli: VcsCli;
     taskRenderer: TaskRenderer;
 }
@@ -24,16 +30,49 @@ export class AppConfig {
         Env.loadEnv();
 
         try {
-            await access(join(process.cwd(), 'node_modules'))
+            await access(TMP_DIR);
         }
         catch {
+            await mkdir(TMP_DIR);
+        }
+
+        try {
+            await access(join(TMP_DIR, 'node_modules'));
+        } catch {
             await symlink(join(process.cwd(), 'node_modules'), join(TMP_DIR, 'node_modules'), 'dir');
+        }
+
+        const PATH_TO_CONFIG_FILE_IN_TMP = join(TMP_DIR, CONFIG_FILE_NAME);
+        await cp(PATH_TO_CONFIG_FILE, PATH_TO_CONFIG_FILE_IN_TMP, {
+            force: true,
+        });
+
+        if (isCliInDevMode()) {
+            try {
+                await access(join(TMP_DIR, 'src'));
+            } catch {
+                await cp(join(process.cwd(), 'src'), join(TMP_DIR, 'src'), {
+                    recursive: true,
+                });
+            }
+        }
+
+        try {
+            await access(join(TMP_DIR, 'package.json'));
+        } catch {
+            await writeFile(join(TMP_DIR, 'package.json'), JSON.stringify(SPROUT_CONFIG_FILE_PACKAGE_JSON));
+        }
+
+        try {
+            await access(join(TMP_DIR, 'tsconfig.json'));
+        } catch {
+            await writeFile(join(TMP_DIR, 'tsconfig.json'), JSON.stringify(SPROUT_CONFIG_FILE_TS_CONFIG));
         }
 
         const pathToCompiledFile = await compileTs({
             outDir: join(TMP_DIR),
             rootDir: join(TMP_DIR),
-            configPath: CONFIG_FILE_NAME,
+            configPath: PATH_TO_CONFIG_FILE_IN_TMP,
         });
 
         const {
@@ -77,7 +116,7 @@ const getCompileCommand = ({ configPath, outDir, rootDir }: ICompileTsSettings):
 const compileTs = (compileSettings: ICompileTsSettings): Promise<string> => {
     return new Promise((resolve, reject) => {
         const compileProcess = exec(getCompileCommand(compileSettings), {
-            cwd: process.cwd(),
+            cwd: TMP_DIR,
         });
 
         compileProcess.stderr?.pipe(process.stderr);
