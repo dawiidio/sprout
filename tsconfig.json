@@ -16,6 +16,7 @@
         "forceConsistentCasingInFileNames": true,
         "downlevelIteration": true,
         "skipLibCheck": true,
+        "declaration": true,
         "removeComments": true,
         "rootDir": "src",
         "module": "NodeNext",

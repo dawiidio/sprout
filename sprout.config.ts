@@ -1,4 +1,4 @@
-import { SproutConfigFunction } from './src/types';
+import { SproutConfigFunction } from './src/exports';
 import { JiraCli } from './src/project/impl/jira/JiraCli';
 import { Ollama } from './src/llm/impl/Ollama';
 import { GitCli } from './src/vsc/impl/git/GitCli';

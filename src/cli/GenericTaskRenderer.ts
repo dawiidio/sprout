@@ -1,12 +1,12 @@
-import { SelectChoice, TaskRenderer } from '../project/TaskRenderer';
+import { TaskRendererSelectChoice, TaskRenderer } from './TaskRenderer';
 import { GenericTask } from '../project/ProjectCli';
 
 export class GenericTaskRenderer implements TaskRenderer {
-    renderTasks(tasks: GenericTask[]): SelectChoice[] {
+    renderTasks(tasks: GenericTask[]): TaskRendererSelectChoice[] {
         return tasks.map((task, idx) => this.renderTask(task, idx));
     }
 
-    renderTask(task: GenericTask, idx: number): SelectChoice {
+    renderTask(task: GenericTask, idx: number): TaskRendererSelectChoice {
         return {
             value: task,
             name: this.renderLabel(task, idx),

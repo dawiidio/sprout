@@ -3,7 +3,7 @@ import type { GenericTask } from '../project/ProjectCli';
 import { ChangeType } from '../common';
 
 export interface VcsCli {
-    saveChanges(message: string): Promise<void>;
+    commit(message: string): Promise<void>;
     checkout(branch: string): Promise<void>;
     push(): Promise<void>;
     summarizeCurrentChanges(): Promise<string>;

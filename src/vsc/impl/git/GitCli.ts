@@ -29,16 +29,24 @@ export class GitCli implements VcsCli {
         };
     }
 
-    async saveChanges(message: string) {
+    async commit(message: string) {
+        if (this.options.addBeforeCommit) {
+            await asyncExec('git add .');
+        }
 
+        await asyncExec(`git commit -m "${message}"`);
+
+        if (this.options.pushAfterCommit) {
+            await this.push();
+        }
     }
 
     async checkout(branchName: string) {
-
+        await asyncExec(`git checkout ${branchName}`);
     }
 
     async push() {
-
+        await asyncExec(`git push`);
     }
 
     async summarizeCurrentChanges(): Promise<string> {

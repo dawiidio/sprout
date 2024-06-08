@@ -1,6 +1,6 @@
 import { GenericTask } from '../project/ProjectCli';
 
-export interface SelectChoice {
+export interface TaskRendererSelectChoice {
     value: GenericTask;
     name?: string;
     description?: string;
@@ -10,6 +10,6 @@ export interface SelectChoice {
 
 export interface TaskRenderer {
     renderLabel(task: GenericTask, idx: number): string;
-    renderTask(task: GenericTask, idx: number): SelectChoice;
-    renderTasks(tasks: GenericTask[]): SelectChoice[];
+    renderTask(task: GenericTask, idx: number): TaskRendererSelectChoice;
+    renderTasks(tasks: GenericTask[]): TaskRendererSelectChoice[];
 }
