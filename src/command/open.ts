@@ -283,7 +283,7 @@ async function action(issueId?: string, options?: { update: boolean }) {
 
     if (await AppConfig.config.vcsCli.isMainBranch() && (options?.update || updateMainBeforeCheckout)) {
         try {
-            await runWithIndicator('Updating main branch', 'Main branch updated', async () => {
+            await runWithIndicator('Updating main branch before checkout', 'Main branch updated', async () => {
                 await AppConfig.config.vcsCli.updateMainBranch();
             });
         }
@@ -293,6 +293,8 @@ async function action(issueId?: string, options?: { update: boolean }) {
     }
 
     await AppConfig.config.vcsCli.checkout(branchName);
+
+    console.log(chalk.green(`Branch ${branchName} created ✅`));
 }
 
 export const openCmd = new Command('open')
