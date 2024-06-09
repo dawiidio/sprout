@@ -6,8 +6,11 @@ import { initCmd } from '~/command/init';
 import { commitCmd } from '~/command/commit';
 import { CommandOptionsStorage, isCliInDevMode, logger } from '~/common';
 import { ILoggerConfigString, Logger } from '@dawiidio/tools/lib/node/Logger/Logger';
+import { readFile } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
 
 async function main() {
+    const pkg = JSON.parse(await readFile(join(__dirname,'..', 'package.json'), 'utf-8'));
     const defaultLogLevel: ILoggerConfigString = isCliInDevMode() ? 'debug|error|info|warn' : 'error|warn';
     logger.setLogLevel(Logger.parseLogLevel(defaultLogLevel as ILoggerConfigString))
 
@@ -23,6 +26,10 @@ async function main() {
             logger.info('Dry run enabled');
             return true;
         },  false)
+        .option('--version -v', 'output the version number', () => {
+            console.log(pkg.version);
+            process.exit(0);
+        })
         .addCommand(openCmd)
         .addCommand(initCmd)
         .addCommand(commitCmd);
