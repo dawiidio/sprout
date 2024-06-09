@@ -47,3 +47,36 @@ export const SPROUT_CONFIG_FILE_PACKAGE_JSON = {
     },
     keywords: [],
 };
+
+export const SAMPLE_CONFIG = `
+import { 
+    SproutConfigFunction, 
+    JiraCli,
+    Ollama,
+    GitCli,
+    GenericTaskRenderer,
+    OpenAi,
+} from '@dawiidio/sprout';
+
+export const getConfig: SproutConfigFunction = async () => {
+    return {
+        projectCli: new JiraCli(),
+        llmCli: {
+            code: new Ollama('dolphincoder:15b-starcoder2-q5_K_M'),
+            text: new OpenAi({
+                model: 'gpt-4',
+                max_tokens: 100,
+            }),
+        },
+        vcsCli: new GitCli(),
+        taskRenderer: new GenericTaskRenderer(),
+    }
+}
+`;
+
+export const SAMPLE_ENV = `JIRA_API_KEY=jira-api-key
+JIRA_EMAIL=your@email.com
+JIRA_DEFAULT_PROJECT_KEY=ABC
+JIRA_URL=https://your-domain.atlassian.net
+OPENAI_API_KEY=sk-api-key
+`;

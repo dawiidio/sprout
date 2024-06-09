@@ -1,42 +1,16 @@
 import { Command } from 'commander';
 import { asyncExec, CommonCommandOptions, runWithIndicator } from '~/common';
 import { access, appendFile, mkdir, writeFile } from 'node:fs/promises';
-import { ENV_FILE_NAME, FAVOURITES_FILE_PATH, HOME_DIR_PATH, PATH_TO_CONFIG_FILE, PATH_TO_LOCAL_ENV } from '~/consts';
+import {
+    ENV_FILE_NAME,
+    FAVOURITES_FILE_PATH,
+    HOME_DIR_PATH,
+    PATH_TO_CONFIG_FILE,
+    PATH_TO_LOCAL_ENV,
+    SAMPLE_CONFIG, SAMPLE_ENV,
+} from '~/consts';
 import process from 'process';
 import { join } from 'path';
-
-const SAMPLE_CONFIG = `
-import { 
-    SproutConfigFunction, 
-    JiraCli,
-    Ollama,
-    GitCli,
-    GenericTaskRenderer,
-    OpenAi,
-} from '@dawiidio/sprout';
-
-export const getConfig: SproutConfigFunction = async () => {
-    return {
-        projectCli: new JiraCli(),
-        llmCli: {
-            code: new Ollama('dolphincoder:15b-starcoder2-q5_K_M'),
-            text: new OpenAi({}, {
-                model: 'gpt-4',
-                max_tokens: 100,
-            }),
-        },
-        vcsCli: new GitCli(),
-        taskRenderer: new GenericTaskRenderer(),
-    }
-}
-`;
-
-const SAMPLE_ENV = `JIRA_API_KEY=jira-api-key
-JIRA_EMAIL=your@email.com
-JIRA_DEFAULT_PROJECT_KEY=ABC
-JIRA_URL=https://your-domain.atlassian.net
-OPENAI_API_KEY=sk-api-key
-`;
 
 const action = async (options: CommonCommandOptions) => {
     if (options.dryRun) {

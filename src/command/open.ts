@@ -19,13 +19,13 @@ interface PlatformQueryLoopResponse {
 
 const enterPlatformQueryLoop = async (query: string, editLoop = false): Promise<PlatformQueryLoopResponse> => {
     if (editLoop) {
-        query = await input({
+        query = await useCancelablePrompt(input({
             message: 'Edit query [press tab to edit]',
             default: query,
-        });
+        }));
     }
 
-    const queryResponse = await select<'ok' | 'edit' | 'abort' | 'saveAndOk'>({
+    const queryResponse = await useCancelablePrompt(select<'ok' | 'edit' | 'abort' | 'saveAndOk'>({
         message: `Current query: ${query}`,
         choices: [
             {
@@ -45,7 +45,7 @@ const enterPlatformQueryLoop = async (query: string, editLoop = false): Promise<
                 value: 'abort',
             },
         ],
-    });
+    }));
 
     switch (queryResponse) {
         case 'abort':
