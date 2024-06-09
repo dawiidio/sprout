@@ -116,7 +116,7 @@ interface ICompileTsSettings {
 }
 
 const getCompileCommand = ({ configPath, outDir, rootDir }: ICompileTsSettings): string => {
-    return `tsc ${configPath} --outDir ${outDir} --rootDir ${rootDir} --declaration false --module nodenext --skipDefaultLibCheck true`;
+    return `${join('.', 'node_modules', '.bin', 'tsc')} ${configPath} --outDir ${outDir} --rootDir ${rootDir} --declaration false --module nodenext --skipDefaultLibCheck true`;
 };
 
 const compileTs = (compileSettings: ICompileTsSettings): Promise<string> => {
@@ -144,7 +144,6 @@ const compileTs = (compileSettings: ICompileTsSettings): Promise<string> => {
 
 const shouldUpdateConfig = async (): Promise<boolean> => {
     try {
-        console.log(join(TMP_DIR, CONFIG_FILE_NAME).replace('.ts', '.js'));
         await access(join(TMP_DIR, CONFIG_FILE_NAME).replace('.ts', '.js'));
 
         const localConfigHash = await getLocalConfigHash();
