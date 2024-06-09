@@ -2,11 +2,11 @@
   "name": "@dawiidio/sprout",
   "version": "0.0.14",
   "description": "Small CLI tool to automate your workflow",
-  "main": "dist/index.js",
+  "main": "dist/exports.js",
   "scripts": {
     "build": "tsc && tsc-alias",
     "build:watch": "(concurrently \"tsc -w\" \"tsc-alias -w\")",
-    "dev": "SPROUT_DEV=true node dist/index.js",
+    "dev": "SPROUT_DEV=true node dist/cliEntrypoint.js",
     "prepublish": "npm run build"
   },
   "publishConfig": {
@@ -36,7 +36,7 @@
     "url": "https://dawiid.io"
   },
   "bin": {
-    "sprout": "dist/index.js"
+    "sprout": "dist/cliEntrypoint.js"
   },
   "repository": {
     "type": "git",
