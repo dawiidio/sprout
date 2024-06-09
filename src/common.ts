@@ -7,6 +7,7 @@ import { Prompt } from './llm/Prompt';
 import { ValidationError } from 'yup';
 import { Descriptable } from './llm/Descriptable';
 import { format } from 'date-fns';
+import { EventEmitter, ListenerFn } from '@dawiidio/tools/lib/node/Event/EventEmitter/EventEmitter';
 import { PATH_TO_GLOBAL_ENV, PATH_TO_LOCAL_ENV } from './consts';
 
 export type ChangeType = 'feat' | 'fix' | 'chore' | 'refactor' | 'style' | 'test' | 'docs'
@@ -146,3 +147,28 @@ export const runWithIndicator = async <T>(message: string, successMsg: string, a
 
     return results;
 }
+
+const eventEmitter = new EventEmitter();
+process.on('exit', () => {
+    eventEmitter.trigger('exit', null);
+});
+
+export const useCancelablePrompt = async <T>(cancelablePromise: import("@inquirer/type").CancelablePromise<T>): Promise<T> => {
+    const off = eventEmitter.on('exit', () => {
+        cancelablePromise.cancel();
+        process.exit();
+    });
+
+    try {
+        return await cancelablePromise;
+    }
+    catch (e) {
+        if ((e as Error).message.includes('Prompt was canceled')) {
+            return 'abort' as T;
+        }
+        throw e;
+    }
+    finally {
+        off();
+    }
+};

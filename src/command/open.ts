@@ -2,7 +2,13 @@ import select from '@inquirer/select';
 import input from '@inquirer/input';
 import { Command } from 'commander';
 import { AppConfig } from '~/config';
-import { CHANGE_TYPE_OPTIONS, ChangeType, CommandOptionsStorage, runWithIndicator } from '~/common';
+import {
+    CHANGE_TYPE_OPTIONS,
+    ChangeType,
+    CommandOptionsStorage,
+    runWithIndicator,
+    useCancelablePrompt,
+} from '~/common';
 import { GenericTask } from '~/project/ProjectCli';
 import { FavouriteQuery, FavouriteQueryStorage } from '~/favourite/FavouriteQueryStorage';
 
@@ -14,7 +20,7 @@ interface PlatformQueryLoopResponse {
 const enterPlatformQueryLoop = async (query: string, editLoop = false): Promise<PlatformQueryLoopResponse> => {
     if (editLoop) {
         query = await input({
-            message: 'Edit query [click tab to edit]',
+            message: 'Edit query [press tab to edit]',
             default: query,
         });
     }
@@ -72,10 +78,10 @@ const fetchTasksByQueryAndShowIndicator = async (query: string): Promise<Generic
 const enterNaturalLanguageQueryLoop = async (query?: QueryData): Promise<QueryData> => {
     const { default: ora } = await import('ora');
 
-    const naturalLanguageQuery = await input({
-        message: `Describe what issues you want to work on ${query ? '[click tab to edit]' : ''}`,
+    const naturalLanguageQuery = await useCancelablePrompt(input({
+        message: `Describe what issues you want to work on ${query ? '[press tab to edit]' : ''}`,
         default: query?.naturalLanguage,
-    });
+    }));
     const llmSpinner = ora('Generating query').start();
     const platformQuery = await AppConfig.runPrompt(
         AppConfig.config.projectCli.getPlatformQueryPrompt(naturalLanguageQuery),
@@ -108,32 +114,33 @@ interface QueryData {
 }
 
 const enterQuerySelection = async (queryData?: QueryData): Promise<GenericTask> => {
+    const { default: chalk } = await import('chalk');
     let newQueryOrFavourite: 'new' | 'favourite' = 'new';
 
     if (!queryData) {
-        newQueryOrFavourite = ((await select<'new' | 'favourite'>({
-            message: 'Select issue',
+        newQueryOrFavourite = ((await useCancelablePrompt(select<'new' | 'favourite'>({
+            message: 'Select action',
             choices: [
                 {
-                    name: 'Create new query',
+                    name: '🌱 Create new query',
                     value: 'new',
                 },
                 {
-                    name: 'Select from favourites',
+                    name: '♥️ Select from favourites',
                     value: 'favourite',
                 },
             ],
-        })));
+        }))));
     }
 
     if (newQueryOrFavourite === 'favourite') {
         const favourites = FavouriteQueryStorage.getFavouritesForPlatform(AppConfig.config.projectCli.type);
 
         if (!favourites.length) {
-            console.log('No favourites found');
+            console.log(chalk.yellow('No favourites found 💔, creating new query'));
             queryData = await enterNaturalLanguageQueryLoop();
         } else {
-            const selectedFavouriteOrAction = await select<FavouriteQuery | 'abort'>({
+            const selectedFavouriteOrAction = await useCancelablePrompt(select<FavouriteQuery | 'abort'>({
                 message: 'Select query',
                 choices: [
                     ...favourites
@@ -147,7 +154,7 @@ const enterQuerySelection = async (queryData?: QueryData): Promise<GenericTask> 
                         value: 'abort',
                     }
                 ],
-            });
+            }));
 
             if (selectedFavouriteOrAction === 'abort') {
                 return enterQuerySelection();
@@ -167,7 +174,7 @@ const enterQuerySelection = async (queryData?: QueryData): Promise<GenericTask> 
 
     const tasks = await fetchTasksByQueryAndShowIndicator(queryData?.query);
 
-    const taskOrAction = ((await select<GenericTask | 'edit' | 'abort'>({
+    const taskOrAction = ((await useCancelablePrompt(select<GenericTask | 'edit' | 'abort'>({
         message: 'Select issue',
         choices: [
             ...AppConfig.config.taskRenderer.renderTasks(tasks),
@@ -181,7 +188,7 @@ const enterQuerySelection = async (queryData?: QueryData): Promise<GenericTask> 
             },
         ],
         loop: true,
-    })));
+    }))));
 
     switch (taskOrAction) {
         case 'edit':
@@ -194,14 +201,11 @@ const enterQuerySelection = async (queryData?: QueryData): Promise<GenericTask> 
 }
 
 const enterBranchNameLoop = async (generatedBranchName: string, errored?: boolean): Promise<string> => {
-    const branchName = await input({
-        message: errored ? `Fix branch name` : `Branch name looks okay? [click tab to edit]`,
+    const branchName = await useCancelablePrompt(input({
+        message: errored ? `Fix branch name` : `Branch name looks okay? [press tab to edit]`,
         default: generatedBranchName,
-    });
-
-    if (!AppConfig.config.vcsCli.testBranchName(branchName)) {
-        return enterBranchNameLoop(branchName, true);
-    }
+        validate: (value) => AppConfig.config.vcsCli.testBranchName(value) || true,
+    }));
 
     return branchName;
 };
@@ -214,7 +218,7 @@ async function action(issueId?: string, options?: { update: boolean }) {
     const { mainBranchName, updateMainBeforeCheckout } = AppConfig.config.vcsCli.options;
 
     if (await AppConfig.config.vcsCli.isIssueBranch()) {
-        const nextStep = await select<'fromCurrent' | 'fromMaster' | 'abort'>({
+        const nextStep = await useCancelablePrompt(select<'fromCurrent' | 'fromMaster' | 'abort'>({
             message: `You are currently on issue branch ${currentBranchName} - choose what to do next`,
             choices: [
                 {
@@ -230,7 +234,7 @@ async function action(issueId?: string, options?: { update: boolean }) {
                     value: 'abort',
                 },
             ],
-        });
+        }));
 
         switch (nextStep) {
             case 'fromMaster': {
@@ -260,10 +264,10 @@ async function action(issueId?: string, options?: { update: boolean }) {
         task = tempTask;
     }
 
-    const changeType = await select<ChangeType>({
+    const changeType = await useCancelablePrompt(select<ChangeType>({
         message: 'Select change type',
         choices: CHANGE_TYPE_OPTIONS,
-    });
+    }));
 
     const generatedBranchName = await runWithIndicator('Generating branch name', 'Branch name generated', async () => {
         return AppConfig.runPrompt(

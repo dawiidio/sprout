@@ -6,6 +6,7 @@ export const FAVOURITES_FILE_PATH = join(HOME_DIR_PATH, 'favourites.json');
 export const CONFIG_FILE_NAME = 'sprout.config.ts';
 export const PATH_TO_CONFIG_FILE = join(process.cwd(), CONFIG_FILE_NAME);
 export const TMP_DIR = join(tmpdir(), `sprout-tmp-${basename(process.cwd())}`);
+export const PATH_TO_CONFIG_HASH_FILE = join(TMP_DIR, 'sprout.config.hash');
 export const ENV_FILE_NAME = '.sprout.env';
 export const PATH_TO_LOCAL_ENV = join(process.cwd(), ENV_FILE_NAME);
 export const PATH_TO_GLOBAL_ENV = join(HOME_DIR_PATH, ENV_FILE_NAME);

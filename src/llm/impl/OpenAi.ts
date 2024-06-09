@@ -6,16 +6,16 @@ import { ChatCompletionCreateParamsNonStreaming } from 'openai/src/resources/cha
 export class OpenAi implements LLMCli {
     protected openai: OpenAI;
 
-    constructor(clientOptions: AzureClientOptions, public modelOptions: Omit<ChatCompletionCreateParamsNonStreaming, 'messages' | 'stream'>) {
+    constructor(public modelOptions: Partial<Omit<ChatCompletionCreateParamsNonStreaming, 'messages' | 'stream'>> = {}, public clientOptions: AzureClientOptions = {}) {
         this.openai = new OpenAiApi({
             apiKey: process.env.OPENAI_API_KEY,
-            ...clientOptions,
+            ...this.clientOptions,
         });
     }
 
     async sendPrompt(prompt: Prompt<any> | string): Promise<string> {
         const x = await this.openai.chat.completions.create({
-            ...this.modelOptions,
+            ...this.modelOptions as ChatCompletionCreateParamsNonStreaming,
             messages: [
                 {
                     role: 'user',

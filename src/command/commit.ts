@@ -4,7 +4,7 @@ import {
     ChangeType,
     CommandOptionsStorage,
     CommonCommandOptions,
-    runWithIndicator,
+    runWithIndicator, useCancelablePrompt,
 } from '~/common';
 import input from '@inquirer/input';
 import { AppConfig } from '~/config';
@@ -21,11 +21,11 @@ const enterCommitMessageLoop = async (message: string, changeType: ChangeType, e
         vcsCli,
     } = AppConfig.config;
 
-    const commitMessage = await input({
+    const commitMessage = await useCancelablePrompt(input({
         message: `(${errored ? chalk.red('Fix commit message') : 'Commit message'}) [press tab to edit]`,
         transformer: (val) => vcsCli.formatCommitMessage(changeType, val),
         default: message,
-    });
+    }));
 
     const commitMessageWithChangeType = vcsCli.formatCommitMessage(changeType, commitMessage);
 
@@ -43,10 +43,10 @@ const action = async (options: CommandOptions) => {
         vcsCli,
     } = AppConfig.config;
 
-    const changeType = await select<ChangeType>({
+    const changeType = await useCancelablePrompt(select<ChangeType>({
         message: 'Select change type',
         choices: CHANGE_TYPE_OPTIONS,
-    });
+    }));
 
     let changesDescription = '';
 

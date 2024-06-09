@@ -1,20 +1,20 @@
 import { join } from 'node:path';
-import { access, cp, mkdir, symlink, writeFile } from 'node:fs/promises';
+import { access, cp, mkdir, symlink, writeFile, readFile } from 'node:fs/promises';
 import { exec } from 'node:child_process';
-import { Env, isCliInDevMode } from './common';
+import { Env, isCliInDevMode, logger } from './common';
 import { Prompt, PromptType } from './llm/Prompt';
-import process from 'process';
 import {
     CONFIG_FILE_NAME,
     PATH_TO_CONFIG_FILE,
     TMP_DIR,
     SPROUT_CONFIG_FILE_TS_CONFIG,
-    SPROUT_CONFIG_FILE_PACKAGE_JSON,
+    SPROUT_CONFIG_FILE_PACKAGE_JSON, PATH_TO_CONFIG_HASH_FILE,
 } from './consts';
 import { type ProjectCli } from './project/ProjectCli';
 import { type LLMCli } from './llm/LLMCli';
 import { type VcsCli } from './vsc/VcsCli';
 import { type TaskRenderer } from './cli/TaskRenderer';
+import murmurhash from 'murmurhash';
 
 export interface Config {
     projectCli: ProjectCli;
@@ -42,8 +42,8 @@ export class AppConfig {
             await symlink(join(process.cwd(), 'node_modules'), join(TMP_DIR, 'node_modules'), 'dir');
         }
 
-        const PATH_TO_CONFIG_FILE_IN_TMP = join(TMP_DIR, CONFIG_FILE_NAME);
-        await cp(PATH_TO_CONFIG_FILE, PATH_TO_CONFIG_FILE_IN_TMP, {
+        const pathToConfigFileInTmp = join(TMP_DIR, CONFIG_FILE_NAME);
+        await cp(PATH_TO_CONFIG_FILE, pathToConfigFileInTmp, {
             force: true,
         });
 
@@ -69,15 +69,21 @@ export class AppConfig {
             await writeFile(join(TMP_DIR, 'tsconfig.json'), JSON.stringify(SPROUT_CONFIG_FILE_TS_CONFIG));
         }
 
-        const pathToCompiledFile = await compileTs({
-            outDir: join(TMP_DIR),
-            rootDir: join(TMP_DIR),
-            configPath: PATH_TO_CONFIG_FILE_IN_TMP,
-        });
+        const pathToCompiledConfigFileInTmp = pathToConfigFileInTmp.replace('.ts', '.js');
+
+        if (await shouldUpdateConfig()) {
+            logger.info('Config changed. Recompiling config file');
+            await compileTs({
+                outDir: join(TMP_DIR),
+                rootDir: join(TMP_DIR),
+                configPath: pathToConfigFileInTmp,
+            });
+            await updateConfigHash(await getLocalConfigHash());
+        }
 
         const {
             getConfig,
-        } = await import(pathToCompiledFile);
+        } = await import(pathToCompiledConfigFileInTmp);
 
         if (typeof getConfig !== 'function') {
             throw new Error('Sprout config file must export getConfig function!');
@@ -134,4 +140,36 @@ const compileTs = (compileSettings: ICompileTsSettings): Promise<string> => {
             reject();
         });
     });
+};
+
+const shouldUpdateConfig = async (): Promise<boolean> => {
+    const localConfigHash = await getLocalConfigHash();
+    const savedConfigHash = await getSavedConfigHash();
+
+    return localConfigHash !== savedConfigHash;
+}
+
+const getLocalConfigHash = async (): Promise<string> => {
+    const configFile = await readFile(PATH_TO_CONFIG_FILE, 'utf-8');
+    return murmurhash.v3(configFile).toString();
+};
+
+const getSavedConfigHash = async (): Promise<string> => {
+    try {
+        await access(PATH_TO_CONFIG_HASH_FILE);
+    }
+    catch {
+        await writeFile(PATH_TO_CONFIG_HASH_FILE, '');
+        return '';
+    }
+
+    try {
+        return readFile(PATH_TO_CONFIG_HASH_FILE, 'utf-8');
+    } catch {
+        return '';
+    }
+}
+
+const updateConfigHash = async (hash: string) => {
+    await writeFile(PATH_TO_CONFIG_HASH_FILE, hash);
 };

@@ -23,13 +23,12 @@ export interface VcsCli {
     checkout(branch: string): Promise<void>;
     push(): Promise<string|void>;
     add(): Promise<string|void>;
-    summarizeCurrentChanges(): Promise<string>;
     getCurrentBranchName(): Promise<string>;
     isMainBranch(): Promise<boolean>;
     isIssueBranch(): Promise<boolean>;
     checkoutToMainBranch(): Promise<string>;
     getBranchNamePrompt(task: GenericTask, changeType: ChangeType): Prompt<any>;
-    testBranchName(branchName: string): boolean;
+    testBranchName(branchName: string): void | string;
     updateMainBranch(): Promise<void>;
     getBranchData(branchName: string): VcsBranchData;
     getChangesDescriptionPrompt(): Promise<Prompt<any>>;

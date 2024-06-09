@@ -129,6 +129,9 @@ export const DEFAULT_JIRA_TASK_FIELDS = [
 ];
 
 export class JiraCli<T extends JiraIssue = JiraIssue> implements ProjectCli {
+    static readonly DEFAULT_JIRA_FILTERS = DEFAULT_JIRA_FILTERS;
+    static readonly DEFAULT_JIRA_TASK_FIELDS = DEFAULT_JIRA_TASK_FIELDS;
+
     filters: FilterField<any>[] = [];
     taskFields: TaskField<any>[] = [];
     public readonly options: JiraCliOptions;
@@ -148,9 +151,9 @@ export class JiraCli<T extends JiraIssue = JiraIssue> implements ProjectCli {
         optionsValidator.validateSync(mergedOptions);
 
         this.options = mergedOptions as JiraCliOptions;
-        this.filters = options.filters || DEFAULT_JIRA_FILTERS;
+        this.filters = options.filters || JiraCli.DEFAULT_JIRA_FILTERS;
         // @ts-ignore
-        this.taskFields = options.fields || DEFAULT_JIRA_TASK_FIELDS;
+        this.taskFields = options.fields || JiraCli.DEFAULT_JIRA_TASK_FIELDS;
     }
 
 

@@ -40,10 +40,6 @@ export class GitCli implements VcsCli {
         await asyncExec('git add .');
     }
 
-    async summarizeCurrentChanges(): Promise<string> {
-        return '';
-    }
-
     getBranchNamePrompt(task: GenericTask, changeType: ChangeType): IssueToBranchNamePrompt {
         return new IssueToBranchNamePrompt({
             task: JSON.stringify(task, null, 2),
@@ -76,13 +72,13 @@ export class GitCli implements VcsCli {
         return this.options.mainBranchName;
     };
 
-    testBranchName(branchName: string): boolean {
+    testBranchName(branchName: string): void | string {
         try {
             GitIssueBranch.fromString(branchName);
-            return true;
+            return;
         }
         catch {
-            return false;
+            return 'Branch name must match regex, example branch name: feat/XYZ-1234_some-feature-desc';
         }
     }
 
@@ -106,6 +102,6 @@ export class GitCli implements VcsCli {
     }
 
     async isIssueBranch() {
-        return this.testBranchName(await this.getCurrentBranchName());
+        return !(this.testBranchName(await this.getCurrentBranchName()));
     }
 }
