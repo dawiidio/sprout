@@ -143,20 +143,23 @@ const compileTs = (compileSettings: ICompileTsSettings): Promise<string> => {
 };
 
 const shouldUpdateConfig = async (): Promise<boolean> => {
-    const localConfigHash = await getLocalConfigHash();
-    const savedConfigHash = await getSavedConfigHash();
+    try {
+        console.log(join(TMP_DIR, CONFIG_FILE_NAME).replace('.ts', '.js'));
+        await access(join(TMP_DIR, CONFIG_FILE_NAME).replace('.ts', '.js'));
 
-    return localConfigHash !== savedConfigHash;
+        const localConfigHash = await getLocalConfigHash();
+        const savedConfigHash = await getSavedConfigHash();
+
+        return localConfigHash !== savedConfigHash;
+    }
+    catch {
+        return true;
+    }
 }
 
 const getLocalConfigHash = async (): Promise<string> => {
-    try {
-        const configFile = await readFile(PATH_TO_CONFIG_FILE, 'utf-8');
-        return murmurhash.v3(configFile).toString();
-    }
-    catch {
-        return 'update needed - no file';
-    }
+    const configFile = await readFile(PATH_TO_CONFIG_FILE, 'utf-8');
+    return murmurhash.v3(configFile).toString();
 };
 
 const getSavedConfigHash = async (): Promise<string> => {
