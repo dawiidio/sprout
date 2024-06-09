@@ -150,8 +150,13 @@ const shouldUpdateConfig = async (): Promise<boolean> => {
 }
 
 const getLocalConfigHash = async (): Promise<string> => {
-    const configFile = await readFile(PATH_TO_CONFIG_FILE, 'utf-8');
-    return murmurhash.v3(configFile).toString();
+    try {
+        const configFile = await readFile(PATH_TO_CONFIG_FILE, 'utf-8');
+        return murmurhash.v3(configFile).toString();
+    }
+    catch {
+        return 'update needed - no file';
+    }
 };
 
 const getSavedConfigHash = async (): Promise<string> => {
