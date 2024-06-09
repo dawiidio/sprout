@@ -211,6 +211,7 @@ const enterBranchNameLoop = async (generatedBranchName: string, errored?: boolea
 };
 
 async function action(issueId?: string, options?: { update: boolean }) {
+    const { default: chalk } = await import('chalk');
     await AppConfig.load();
     await FavouriteQueryStorage.load();
 
@@ -281,9 +282,14 @@ async function action(issueId?: string, options?: { update: boolean }) {
         return;
 
     if (await AppConfig.config.vcsCli.isMainBranch() && (options?.update || updateMainBeforeCheckout)) {
-        await runWithIndicator('Updating main branch', 'Main branch updated', async () => {
-            await AppConfig.config.vcsCli.updateMainBranch();
-        });
+        try {
+            await runWithIndicator('Updating main branch', 'Main branch updated', async () => {
+                await AppConfig.config.vcsCli.updateMainBranch();
+            });
+        }
+        catch (e) {
+            console.error(chalk.yellow('Error updating main branch'), e);
+        }
     }
 
     await AppConfig.config.vcsCli.checkout(branchName);

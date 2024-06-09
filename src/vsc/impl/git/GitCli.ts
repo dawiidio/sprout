@@ -1,5 +1,5 @@
 import { VcsCli, VcsCliOptions } from '../../../vsc/VcsCli';
-import { asyncExec, CHANGE_TYPES, ChangeType } from '../../../common';
+import { asyncExec, CHANGE_TYPES, ChangeType, logger } from '../../../common';
 import process from 'process';
 import { GenericTask } from '../../../project/ProjectCli';
 import { GitIssueBranch } from '../../../vsc/impl/git/GitIssueBranch';
@@ -82,9 +82,20 @@ export class GitCli implements VcsCli {
         }
     }
 
+    async ensureRemote(): Promise<void> {
+        await asyncExec('git remote get-url origin');
+    }
+
     async updateMainBranch() {
-        if (await this.isMainBranch()) {
-            await asyncExec(`git pull origin ${this.options.mainBranchName}`);
+        try {
+            await this.ensureRemote();
+
+            if (await this.isMainBranch()) {
+                await asyncExec(`git pull origin ${this.options.mainBranchName}`);
+            }
+        }
+        catch {
+            logger.warn('Remote not found, skipping update');
         }
     }
 
