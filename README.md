@@ -1,5 +1,7 @@
 # Sprout 🌱
 
+![sprout-terminal-gif](https://github.com/dawiidio/sprout/blob/main/public/terminal.gif?raw=true)
+
 Sprout is a simple and lightweight CLI tool with LLM tools integration to
 help you with boring tasks and git flow around them.
 
