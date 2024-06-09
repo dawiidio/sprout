@@ -61,6 +61,13 @@ const action = async (options: CommonCommandOptions) => {
             await access(PATH_TO_CONFIG_FILE);
         } catch {
             await writeFile(PATH_TO_CONFIG_FILE, SAMPLE_CONFIG);
+        }
+    });
+
+    await runWithIndicator('Creating local env file', 'Sprout local env file created', async () => {
+        try {
+            await access(PATH_TO_LOCAL_ENV);
+        } catch {
             await writeFile(PATH_TO_LOCAL_ENV, SAMPLE_ENV);
         }
     });
